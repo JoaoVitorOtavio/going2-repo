@@ -1,0 +1,73 @@
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { UserRole } from './users.enums';
+
+export class UserDTO {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'A senha não pode estar vazia' })
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  password: string;
+
+  @IsEnum(UserRole, {
+    message: 'Invalid type on role',
+  })
+  @IsOptional() // é opicional pq tem default pra cadastrar no banco
+  role: UserRole;
+}
+
+export class updateUserDTO {
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @IsEmail()
+  @IsOptional()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'A senha não pode estar vazia' })
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  @IsOptional()
+  password: string;
+
+  @IsEnum(UserRole, {
+    message: 'Invalid type on role',
+  })
+  @IsOptional() // é opicional pq tem default pra cadastrar no banco
+  role: UserRole;
+}
+
+export class createUserDTO {
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'A senha não pode estar vazia' })
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  password: string;
+
+  @IsEnum(UserRole, {
+    message: 'role deve ser admin, user ou internal',
+  })
+  @IsOptional() // é opicional pq tem default pra cadastrar no banco
+  role: UserRole;
+}
