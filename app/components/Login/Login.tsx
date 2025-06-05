@@ -1,5 +1,6 @@
 "use client";
-import { useState, SetStateAction, Dispatch } from "react";
+import { authService } from "@/services/authService";
+import { useState, SetStateAction, Dispatch, useCallback } from "react";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
@@ -12,6 +13,10 @@ const Login = () => {
     console.log(value);
     stateToSet(value);
   };
+
+  const handleLogin = useCallback(async () => {
+    await authService.login({ email, password });
+  }, [email, password]);
 
   return (
     <div>
@@ -29,6 +34,7 @@ const Login = () => {
         placeholder="Digite sua senha"
         onChange={(e) => handleChange(e.target.value, setPassword)}
       />
+      <button onClick={() => handleLogin()}>Entrar</button>
     </div>
   );
 };
