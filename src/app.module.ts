@@ -5,8 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { Users } from './users/users.entity';
 import { AuthModule } from './auth/auth.module';
+import { CaslModule } from './casl/casl.module';
 
 import * as dotenv from 'dotenv';
+import { AbilityFactory } from './casl/casl-ability.factory/casl-ability.factory';
 dotenv.config();
 
 @Module({
@@ -23,8 +25,9 @@ dotenv.config();
     }),
     UsersModule,
     AuthModule,
+    CaslModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AbilityFactory],
 })
 export class AppModule {}
