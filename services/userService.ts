@@ -24,4 +24,35 @@ export const userService = {
 
     return result;
   },
+  async create(user: Partial<IUser>): Promise<IUser> {
+    try {
+      const res = await fetch(`${API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+
+        toast.error(result.message || "Erro ao criar usuário");
+        throw new Error(result.message || "Erro ao criar usuário");
+      }
+
+      const result: IUser = await res.json();
+
+      toast.success("Usuario criado com sucesso!");
+      return result;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+        throw new Error(error.message || "Erro ao criar usuario!");
+      } else {
+        toast.error("Erro ao criar usuario!");
+        throw new Error("Erro ao criar usuario!");
+      }
+    }
+  },
 };
