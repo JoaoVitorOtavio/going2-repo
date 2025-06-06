@@ -6,8 +6,9 @@ import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { validateJwt } from "./utils/auth";
 import { ReduxProvider } from "../store/provider";
-import Navbar from "./components/Navbar/Navbar";
 import LoadingSpinner from "./components/Spinner/Spinner";
+import { AbilityProvider } from "@/contexts/AbilityContext";
+import { AppInitializer } from "./providers";
 
 export default function RootLayout({
   children,
@@ -30,10 +31,11 @@ export default function RootLayout({
       <body>
         <ToastContainer position="top-right" autoClose={3000} />
         <ReduxProvider>
-          <Suspense fallback={<LoadingSpinner />}>
-            {/* <Navbar /> */}
-            {children}
-          </Suspense>
+          <AppInitializer>
+            <AbilityProvider>
+              <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+            </AbilityProvider>
+          </AppInitializer>
         </ReduxProvider>
       </body>
     </html>
