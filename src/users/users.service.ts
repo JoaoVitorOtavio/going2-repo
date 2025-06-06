@@ -9,6 +9,7 @@ import { Users } from './users.entity';
 import { Repository } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { updateUserDTO, createUserDTO } from './users.dto';
+import * as bcrypt from 'bcrypt';
 dotenv.config();
 
 @Injectable()
@@ -18,8 +19,14 @@ export class UsersService {
     private usersRepo: Repository<Users>,
   ) {}
 
-  async create(data: Partial<createUserDTO>): Promise<Users> {
+  async create(data: createUserDTO): Promise<Users> {
     try {
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hashedPassword = await bcrypt.hash(data.password, salt);
+
+      data.password = hashedPassword;
+
       const user = this.usersRepo.create(data);
       const result = await this.usersRepo.save(user);
 
@@ -57,6 +64,12 @@ export class UsersService {
       throw new BadRequestException('Erro ao atualizar usuário');
     }
   }
+
+  // async updatePassword(
+  //   id: number,
+  //   newPassword: string,
+  //   currentPassword: string,
+  // ): Promise<Users> {}
 
   async findAll(): Promise<Users[]> {
     try {
