@@ -46,17 +46,22 @@ export class updateUserDTO {
   @IsOptional()
   email: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'A senha não pode estar vazia' })
-  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
-  @IsOptional()
-  password: string;
-
   @IsEnum(UserRole, {
     message: 'Invalid type on role',
   })
   @IsOptional() // é opicional pq tem default pra cadastrar no banco
   role: UserRole;
+}
+
+export class UpdateUserPasswordDTO {
+  @IsString()
+  @IsNotEmpty({ message: 'A nova senha não pode estar vazia' })
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  newPassword: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'A senha atual não pode estar vazia' })
+  currentPassword: string;
 }
 
 export class createUserDTO {

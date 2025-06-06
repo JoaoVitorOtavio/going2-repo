@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   Injectable,
@@ -42,18 +43,27 @@ export class UsersService {
     }
   }
 
-  async update(id: number, updateData: updateUserDTO): Promise<Users> {
+  async update(id: number, updateData: updateUserDTO): Promise<Partial<Users>> {
     try {
-      const user = await this.usersRepo.findOne({ where: { id } });
+      const user: Users | null = await this.usersRepo.findOne({
+        where: { id },
+      });
 
       if (!user) {
         throw new NotFoundException('Usuário não encontrado');
       }
 
-      Object.assign(user, updateData);
-      await this.usersRepo.update(id, updateData);
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== undefined),
+      );
 
-      return user;
+      Object.assign(user, filteredUpdateData);
+      await this.usersRepo.update(id, filteredUpdateData);
+
+      const result: Partial<Users> = { ...user };
+      delete result.password;
+
+      return result;
     } catch (error: any) {
       if (error instanceof Error) {
         throw new BadRequestException(
@@ -65,11 +75,46 @@ export class UsersService {
     }
   }
 
-  // async updatePassword(
-  //   id: number,
-  //   newPassword: string,
-  //   currentPassword: string,
-  // ): Promise<Users> {}
+  async updatePassword(
+    id: number,
+    newPassword: string,
+    currentPassword: string,
+  ): Promise<void> {
+    try {
+      const user: Users | null = await this.usersRepo.findOne({
+        where: { id },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      const passwordMatch = await bcrypt.compare(
+        currentPassword,
+        user.password,
+      );
+
+      if (!passwordMatch) {
+        throw new BadRequestException('Senha atual incorreta');
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      user.password = hashedPassword;
+      await this.usersRepo.update(id, user);
+
+      return;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw new BadRequestException(
+          error?.message || 'Erro ao atualizar senha',
+        );
+      }
+
+      throw new BadRequestException('Erro ao atualizar senha');
+    }
+  }
 
   async findAll(): Promise<Users[]> {
     try {
@@ -85,7 +130,7 @@ export class UsersService {
     }
   }
 
-  async findOne(id: number): Promise<Users | null> {
+  async findOne(id: number): Promise<Partial<Users> | null> {
     try {
       const user = await this.usersRepo.findOneBy({ id });
 
@@ -93,7 +138,10 @@ export class UsersService {
         throw new NotFoundException('Usuário não encontrado');
       }
 
-      return user;
+      const result: Partial<Users> = { ...user };
+      delete result.password;
+
+      return result;
     } catch (error: any) {
       if (error instanceof Error) {
         throw new BadRequestException(
