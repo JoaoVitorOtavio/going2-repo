@@ -26,14 +26,22 @@ export default function Users() {
 
   const handleDelete = async (id: number) => {
     try {
+      setIsLoading(true);
       await userService.delete(id);
       dispatch(deleteUser(id));
-    } catch (err) {
-      console.error("Erro ao deletar usuário:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   if (isLoading) return <LoadingSpinner />;
+
+  if (users.length === 0)
+    return (
+      <h1 className="text-3xl mt-8 font-bold text-center mb-8">
+        Nenhum usuário cadastrado!
+      </h1>
+    );
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
