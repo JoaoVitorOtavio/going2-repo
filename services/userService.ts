@@ -16,8 +16,9 @@ export const userService = {
 
     if (!res.ok) {
       const error = await res.json();
-      toast.error("Erro ao buscar usuario!");
-      throw new Error(error.message || "Erro ao buscar usuario!");
+      toast.error(error.message || "Erro ao buscar usuario!");
+
+      return null;
     }
 
     const result: IUser = await res.json();
@@ -37,8 +38,9 @@ export const userService = {
 
     if (!res.ok) {
       const error = await res.json();
-      toast.error("Erro ao buscar usuarios!");
-      throw new Error(error.message || "Erro ao buscar usuarios!");
+      toast.error(error.message || "Erro ao buscar usuarios!");
+
+      return [];
     }
 
     const result: IUser[] = await res.json();
@@ -71,7 +73,7 @@ export const userService = {
       return result;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        toast.error(error.message);
+        toast.error(error.message || "Erro ao atualizar usuario!");
         throw new Error(error.message || "Erro ao atualizar usuario!");
       } else {
         toast.error("Erro ao atualizar usuario!");
@@ -105,11 +107,41 @@ export const userService = {
       return result;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        toast.error(error.message);
+        toast.error(error.message || "Erro ao criar usuario!");
         throw new Error(error.message || "Erro ao criar usuario!");
       } else {
         toast.error("Erro ao criar usuario!");
         throw new Error("Erro ao criar usuario!");
+      }
+    }
+  },
+  async delete(userId: number): Promise<void> {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+
+        toast.error(result.message || "Erro ao deletar usuário");
+        throw new Error(result.message || "Erro ao deletar usuário");
+      }
+
+      toast.success("Usuario deletado com sucesso!");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Erro ao deletar usuario!");
+        throw new Error(error.message || "Erro ao deletar usuario!");
+      } else {
+        toast.error("Erro ao deletar usuario!");
+        throw new Error("Erro ao deletar usuario!");
       }
     }
   },
