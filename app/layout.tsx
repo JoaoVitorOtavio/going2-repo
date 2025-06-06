@@ -2,9 +2,12 @@
 
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { validateJwt } from "./utils/auth";
+import { ReduxProvider } from "../store/provider";
+import Navbar from "./components/Navbar/Navbar";
+import LoadingSpinner from "./components/Spinner/Spinner";
 
 export default function RootLayout({
   children,
@@ -26,7 +29,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ToastContainer position="top-right" autoClose={3000} />
-        {children}
+        <ReduxProvider>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Navbar />
+            {children}
+          </Suspense>
+        </ReduxProvider>
       </body>
     </html>
   );
