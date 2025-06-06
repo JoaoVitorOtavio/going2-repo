@@ -1,11 +1,31 @@
 "use client";
-import { authService } from "@/services/authService";
+import { validateJwt } from "@/app/utils/auth";
+import { authService, LoginResponse } from "@/services/authService";
+import { setToken } from "@/store/slices/userSlice";
 import { redirect } from "next/navigation";
-import { useState, SetStateAction, Dispatch, useCallback } from "react";
+import {
+  useState,
+  SetStateAction,
+  Dispatch,
+  useCallback,
+  useEffect,
+} from "react";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
+  const dispatch = useDispatch();
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const isAuthenticated = validateJwt(token);
+
+    if (isAuthenticated) {
+      redirect("/users");
+    }
+  }, []);
 
   const handleChange = (
     value: string,
@@ -15,9 +35,14 @@ const Login = () => {
   };
 
   const handleLogin = useCallback(async () => {
-    await authService.login({ email, password });
+    const response: LoginResponse = await authService.login({
+      email,
+      password,
+    });
+
+    dispatch(setToken(response.token));
     redirect("/users");
-  }, [email, password]);
+  }, [dispatch, email, password]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
