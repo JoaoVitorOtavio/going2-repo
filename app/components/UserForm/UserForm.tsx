@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { useDispatch } from "react-redux";
+import { LoaderCircle } from "lucide-react";
 
 const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const params = useParams();
@@ -20,6 +21,7 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const [name, setName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [role, setRole] = useState<UserRole>(UserRole.USER);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -48,20 +50,29 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
 
   const handleSubmit = useCallback(async () => {
     const userId = params.id;
+    setIsLoading(true);
 
     if (isEdit) {
-      const user: IUser = await userService.update(Number(userId), {
-        email,
-        name,
-        password,
-        role,
-      });
-
-      dispatch(updateUser(user));
+      try {
+        const user: IUser = await userService.update(Number(userId), {
+          email,
+          name,
+          password,
+          role,
+        });
+        dispatch(updateUser(user));
+      } finally {
+        setIsLoading(false);
+      }
     } else {
-      await userService.create({ email, name, password, role });
+      try {
+        await userService.create({ email, name, password, role });
+      } finally {
+        setIsLoading(false);
+      }
     }
 
+    setIsLoading(false);
     redirect("/users");
   }, [dispatch, email, isEdit, name, params.id, password, role]);
 
@@ -118,11 +129,15 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
         </div>
 
         <button
+          disabled={isLoading}
           type="button"
           onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          className="flex items-center cursor-pointer justify-center w-full bg-blue-600 text-white py-2 rounded transition 
+             hover:bg-blue-700 
+             disabled:hover:bg-blue-600 
+             disabled:cursor-not-allowed"
         >
-          {isEdit ? "Atualizar" : "Cadastrar"}
+          {isLoading ? <LoaderCircle /> : isEdit ? "Editar" : "Cadastrar"}
         </button>
       </div>
     </div>
