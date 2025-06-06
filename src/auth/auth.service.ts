@@ -10,8 +10,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(user: { userEmail: string; password: string }) {
-    const userOnDb = await this.usersService.findOneByEmail(user.userEmail);
+  async login(user: { email: string; password: string }) {
+    const userOnDb = await this.usersService.findOneByEmail(user.email);
 
     if (userOnDb && userOnDb.password === user.password) {
       const result: Partial<UserDTO> = { ...userOnDb };
@@ -19,7 +19,8 @@ export class AuthService {
       delete result.password;
 
       return {
-        access_token: this.jwtService.sign(result),
+        user: result,
+        token: this.jwtService.sign(result),
       };
     }
 
