@@ -1,6 +1,7 @@
 "use client";
 import { IUser, UserRole } from "@/commons/interfaces/users";
 import { userService } from "@/services/userService";
+import { updateUser } from "@/store/slices/userSlice";
 import { redirect, useParams } from "next/navigation";
 import {
   Dispatch,
@@ -9,9 +10,11 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useDispatch } from "react-redux";
 
 const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const params = useParams();
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -47,18 +50,20 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
     const userId = params.id;
 
     if (isEdit) {
-      await userService.update(Number(userId), {
+      const user: IUser = await userService.update(Number(userId), {
         email,
         name,
         password,
         role,
       });
+
+      dispatch(updateUser(user));
     } else {
       await userService.create({ email, name, password, role });
     }
 
     redirect("/users");
-  }, [email, isEdit, name, params.id, password, role]);
+  }, [dispatch, email, isEdit, name, params.id, password, role]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
