@@ -33,6 +33,9 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
           setPassword(user.password);
           setRole(user.role);
         }
+
+        if (!user) redirect("/users");
+
         return user;
       }
 
