@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './users.entity';
 import { Repository } from 'typeorm';
@@ -14,8 +18,20 @@ export class UsersService {
   ) {}
 
   async create(data: Partial<createUserDTO>): Promise<Users> {
-    const user = this.usersRepo.create(data);
-    return this.usersRepo.save(user);
+    try {
+      const user = this.usersRepo.create(data);
+      const result = await this.usersRepo.save(user);
+
+      return result;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw new BadRequestException(
+          error?.message || 'Erro ao criar usuário',
+        );
+      }
+
+      throw new BadRequestException('Erro ao criar usuário');
+    }
   }
 
   async update(id: number, updateData: updateUserDTO): Promise<Users> {
