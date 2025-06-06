@@ -20,23 +20,16 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
 
   useEffect(() => {
     if (isEdit) {
-      // Note: Se for role user ele so pode editar a si mesmo entao da pra pegar do local storage
-      // const user = localStorage.getItem("user");
       async function getUser() {
         const userId = params.id;
-
         const user: IUser | null = await userService.findOne(Number(userId));
 
-        if (user !== null) {
-          setEmail(user.email);
-          setName(user.name);
-          setPassword(user.password);
-          setRole(user.role);
-        }
+        if (!user) return redirect("/users");
 
-        if (!user) redirect("/users");
-
-        return user;
+        setEmail(user.email);
+        setName(user.name);
+        setPassword(user.password);
+        setRole(user.role);
       }
 
       getUser();
@@ -48,67 +41,85 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const handleChange = (
     value: string,
     stateToSet: Dispatch<SetStateAction<string>>
-  ) => {
-    console.log(value);
-    stateToSet(value);
-  };
+  ) => stateToSet(value);
 
   const handleSubmit = useCallback(async () => {
-    if (isEdit) {
-      const userId = params.id;
+    const userId = params.id;
 
+    if (isEdit) {
       await userService.update(Number(userId), {
         email,
         name,
         password,
         role,
       });
-
-      redirect("/users");
     } else {
       await userService.create({ email, name, password, role });
-      redirect("/users");
     }
+
+    redirect("/users");
   }, [email, isEdit, name, params.id, password, role]);
 
   return (
-    <div>
-      <label htmlFor="name">Nome:</label>
-      <input
-        type="text"
-        id="name"
-        value={name}
-        onChange={(e) => handleChange(e.target.value, setName)}
-      />
-      <label htmlFor="email">Email:</label>
-      <input
-        type="text"
-        id="email"
-        value={email}
-        onChange={(e) => handleChange(e.target.value, setEmail)}
-      />
-      <label htmlFor="password">Senha:</label>
-      <input
-        type="password"
-        id="password"
-        value={password}
-        onChange={(e) => handleChange(e.target.value, setPassword)}
-      />
-      <label htmlFor="roles">Role:</label>
-      <select
-        name="roles"
-        id="roles"
-        onChange={(e) => handleSelectChange(e.target.value as UserRole)}
-        value={role}
-      >
-        <option value={UserRole.ADMIN}>Admin</option>
-        <option value={UserRole.MANAGER}>Manager</option>
-        <option value={UserRole.USER}>User</option>
-      </select>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 space-y-6">
+        <h1 className="text-2xl font-bold text-gray-700 text-center">
+          {isEdit ? "Editar Usuário" : "Cadastrar Usuário"}
+        </h1>
 
-      <button type="button" onClick={() => handleSubmit()}>
-        {isEdit ? "Atualizar" : "Cadastrar"}
-      </button>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600">Nome</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => handleChange(e.target.value, setName)}
+              className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => handleChange(e.target.value, setEmail)}
+              className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Senha</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => handleChange(e.target.value, setPassword)}
+              className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Role</label>
+            <select
+              value={role}
+              onChange={(e) => handleSelectChange(e.target.value as UserRole)}
+              className="w-full mt-1 p-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={UserRole.ADMIN}>Admin</option>
+              <option value={UserRole.MANAGER}>Manager</option>
+              <option value={UserRole.USER}>User</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+        >
+          {isEdit ? "Atualizar" : "Cadastrar"}
+        </button>
+      </div>
     </div>
   );
 };
