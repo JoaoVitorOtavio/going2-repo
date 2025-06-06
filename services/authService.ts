@@ -6,7 +6,7 @@ interface LoginPayload {
   password: string;
 }
 
-interface LoginResponse {
+export interface LoginResponse {
   token: string;
   user: {
     id: number;
