@@ -47,6 +47,45 @@ export const userService = {
 
     return result;
   },
+
+  async updatePassword({
+    userId,
+    currentPassword,
+    newPassword,
+  }: {
+    userId: number;
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/users/${userId}/password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+
+        throw new Error(result.message || "Erro ao atualizar senha");
+      }
+
+      toast.success("Senha atualizada com sucesso!");
+      return;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Erro ao atualizar senha!");
+      } else {
+        toast.error("Erro ao atualizar senha!");
+      }
+    }
+  },
+
   async update(userId: number, user: Partial<IUser>): Promise<IUser> {
     try {
       const token = localStorage.getItem("token");
@@ -63,7 +102,6 @@ export const userService = {
       if (!res.ok) {
         const result = await res.json();
 
-        toast.error(result.message || "Erro ao atualizar usuário");
         throw new Error(result.message || "Erro ao atualizar usuário");
       }
 
@@ -97,7 +135,6 @@ export const userService = {
       if (!res.ok) {
         const result = await res.json();
 
-        toast.error(result.message || "Erro ao criar usuário");
         throw new Error(result.message || "Erro ao criar usuário");
       }
 
@@ -130,7 +167,6 @@ export const userService = {
       if (!res.ok) {
         const result = await res.json();
 
-        toast.error(result.message || "Erro ao deletar usuário");
         throw new Error(result.message || "Erro ao deletar usuário");
       }
 
