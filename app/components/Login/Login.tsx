@@ -79,23 +79,9 @@ const Login = () => {
         <div className="space-y-2">
           <button
             onClick={handleLogin}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            className="cursor-pointer w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
           >
             Entrar
-          </button>
-          <button
-            type="button"
-            onClick={() => redirect("/users")}
-            className="w-full bg-gray-100 text-gray-800 py-2 rounded hover:bg-gray-200 transition"
-          >
-            Listagem de usuários
-          </button>
-          <button
-            type="button"
-            onClick={() => redirect("/create/user")}
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-          >
-            Criar usuário
           </button>
         </div>
       </div>

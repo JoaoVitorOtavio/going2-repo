@@ -31,7 +31,7 @@ export default function RootLayout({
         <ToastContainer position="top-right" autoClose={3000} />
         <ReduxProvider>
           <Suspense fallback={<LoadingSpinner />}>
-            <Navbar />
+            {/* <Navbar /> */}
             {children}
           </Suspense>
         </ReduxProvider>
