@@ -10,9 +10,12 @@ import { setToken } from "@/store/slices/userSlice";
 export default function Navbar() {
   const dispatch = useDispatch();
 
+  const user = JSON.parse(localStorage.getItem("user")!);
+
   const userToken = useSelector((state: RootState) => state.user.token);
+
   const [localToken, setLocalToken] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -51,7 +54,10 @@ export default function Navbar() {
           <Link href="/create/user" className="hover:text-gray-200">
             Criar Usuário
           </Link>
-          <Link href="/" className="hover:text-gray-200">
+          <Link
+            href={`/update/user/${user.id}/password`}
+            className="hover:text-gray-200"
+          >
             Mudar Senha
           </Link>
           <span
@@ -66,15 +72,24 @@ export default function Navbar() {
       {/* Links (Mobile) */}
       {isOpen && (
         <div className="md:hidden bg-blue-500 px-4 pb-4 space-y-2">
-          <Link href="/" className="block hover:text-gray-200">
-            Home
-          </Link>
           <Link href="/users" className="block hover:text-gray-200">
-            Usuários
+            Lista de Usuários
           </Link>
-          <Link href="/settings" className="block hover:text-gray-200">
-            Configurações
+          <Link href="/create/user" className="block hover:text-gray-200">
+            Criar Usuário
           </Link>
+          <Link
+            href={`/update/user/${user.id}/password`}
+            className="block hover:text-gray-200"
+          >
+            Mudar Senha
+          </Link>
+          <span
+            className="cursor-pointer hover:text-gray-200"
+            onClick={() => handleLogout()}
+          >
+            Sair
+          </span>
         </div>
       )}
     </nav>
