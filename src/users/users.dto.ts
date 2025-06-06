@@ -16,7 +16,10 @@ export class UserDTO {
   @IsString()
   name: string;
 
-  @IsEmail()
+  @IsEmail(
+    {},
+    { message: 'E-mail inválido. Informe um endereço de e-mail válido.' },
+  )
   email: string;
 
   @IsString()
@@ -36,7 +39,10 @@ export class updateUserDTO {
   @IsOptional()
   name: string;
 
-  @IsEmail()
+  @IsEmail(
+    {},
+    { message: 'E-mail inválido. Informe um endereço de e-mail válido.' },
+  )
   @IsOptional()
   email: string;
 
@@ -57,7 +63,10 @@ export class createUserDTO {
   @IsString()
   name: string;
 
-  @IsEmail()
+  @IsEmail(
+    {},
+    { message: 'E-mail inválido. Informe um endereço de e-mail válido.' },
+  )
   email: string;
 
   @IsString()
