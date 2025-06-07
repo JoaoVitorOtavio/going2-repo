@@ -46,6 +46,11 @@ export class updateUserDTO {
   @IsOptional()
   email: string;
 
+  @IsString()
+  @IsOptional()
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  password: string;
+
   @IsEnum(UserRole, {
     message: 'Invalid type on role',
   })
