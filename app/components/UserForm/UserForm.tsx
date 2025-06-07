@@ -10,11 +10,14 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { LoaderCircle } from "lucide-react";
+import { useAbility } from "@/contexts/AbilityContext";
+import { RootState } from "@/store";
 
 const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const params = useParams();
+  const ability = useAbility();
   const dispatch = useDispatch();
 
   const [email, setEmail] = useState<string>("");
@@ -23,13 +26,21 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
   const [role, setRole] = useState<UserRole>(UserRole.USER);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const currentUser = useSelector((state: RootState) => state.user.user);
+
   useEffect(() => {
     if (isEdit) {
+      if (currentUser?.role !== "admin" && currentUser?.role !== "manager") {
+        if (currentUser?.id !== Number(params.id)) {
+          return redirect("/403");
+        }
+      }
+
       async function getUser() {
         const userId = params.id;
         const user: IUser | null = await userService.findOne(Number(userId));
 
-        if (!user) return redirect("/users");
+        if (!user) return redirect("/home");
 
         setEmail(user.email);
         setName(user.name);
@@ -39,7 +50,7 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
 
       getUser();
     }
-  }, [isEdit, params.id]);
+  }, [currentUser?.id, currentUser?.role, isEdit, params.id]);
 
   const handleSelectChange = (value: UserRole) => setRole(value);
 
@@ -60,6 +71,9 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
           password,
           role,
         });
+
+        localStorage.setItem("user", JSON.stringify(user));
+
         dispatch(updateUser(user));
       } finally {
         setIsLoading(false);
@@ -72,9 +86,21 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
       }
     }
 
-    setIsLoading(false);
-    redirect("/users");
-  }, [dispatch, email, isEdit, name, params.id, password, role]);
+    if (currentUser?.role !== "user") {
+      redirect("/users");
+    }
+
+    redirect("/home");
+  }, [
+    currentUser?.role,
+    dispatch,
+    email,
+    isEdit,
+    name,
+    params.id,
+    password,
+    role,
+  ]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -105,7 +131,13 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600">Senha</label>
+            <label className="block text-sm text-gray-600">
+              Senha
+              <span className="text-xs text-gray-400">
+                {isEdit && " - Opcional"}
+              </span>
+            </label>
+
             <input
               type="password"
               value={password}
@@ -114,18 +146,20 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-600">Role</label>
-            <select
-              value={role}
-              onChange={(e) => handleSelectChange(e.target.value as UserRole)}
-              className="w-full mt-1 p-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={UserRole.ADMIN}>Admin</option>
-              <option value={UserRole.MANAGER}>Manager</option>
-              <option value={UserRole.USER}>User</option>
-            </select>
-          </div>
+          {ability.can("manage", "all") && (
+            <div>
+              <label className="block text-sm text-gray-600">Role</label>
+              <select
+                value={role}
+                onChange={(e) => handleSelectChange(e.target.value as UserRole)}
+                className="w-full mt-1 p-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={UserRole.ADMIN}>Admin</option>
+                <option value={UserRole.MANAGER}>Manager</option>
+                <option value={UserRole.USER}>User</option>
+              </select>
+            </div>
+          )}
         </div>
 
         <button
