@@ -120,7 +120,7 @@ const Login = () => {
 
           <button
             onClick={() => setLoginWithJwt(!loginWithJwt)}
-            className="w-full border border-gray-400 text-gray-700 py-2 rounded hover:bg-gray-100 transition text-sm"
+            className="cursor-pointer w-full border border-gray-400 text-gray-700 py-2 rounded hover:bg-gray-100 transition text-sm"
           >
             {loginWithJwt ? "Voltar para login padrão" : "Login com JWT"}
           </button>
