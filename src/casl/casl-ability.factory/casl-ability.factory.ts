@@ -26,11 +26,12 @@ export class AbilityFactory {
 
       case UserRole.MANAGER:
         can(Actions.Read, Users); // pode ver todos os usuários
-        can(Actions.ReadAll, Users);
-        can(Actions.Update, Users, { role: UserRole.USER }); // só pode editar usuários comuns
+        can(Actions.ReadAll, Users); // pode ver lista de  todos os usuários
+        can(Actions.Update, Users); // pode dar update em todos usuarios
         break;
 
       case UserRole.USER:
+        // Por algum motivo as codintitions nao estao funcionando
         can(Actions.Read, Users, { id: user.id }); // pode ver o próprio perfil
         can(Actions.Update, Users, { id: user.id }); // pode editar só a si mesmo
         break;
