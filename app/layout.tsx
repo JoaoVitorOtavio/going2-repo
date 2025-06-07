@@ -2,8 +2,8 @@
 
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-import { Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, usePathname, redirect } from "next/navigation";
 import { validateJwt } from "./utils/auth";
 import { ReduxProvider } from "../store/provider";
 import LoadingSpinner from "./components/Spinner/Spinner";
@@ -12,19 +12,35 @@ import { AppInitializer } from "./providers";
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const isAuthenticated = validateJwt(token);
 
-    if (!isAuthenticated) {
-      router.push("/");
+    const protectedRoutes = [
+      /^\/users$/,
+      /^\/home$/,
+      /^\/create\/user$/,
+      /^\/update\/user\/\d+$/,
+      /^\/update\/user\/\d+\/password$/,
+    ];
+
+    const isProtected = protectedRoutes.some((regex) => regex.test(pathname));
+
+    if (isProtected && !isAuthenticated) {
+      setLoading(false);
+      redirect("/401");
+    } else {
+      setLoading(false);
     }
-  }, [router]);
+  }, [pathname, router]);
 
   return (
     <html lang="en">
@@ -33,7 +49,9 @@ export default function RootLayout({
         <ReduxProvider>
           <AppInitializer>
             <AbilityProvider>
-              <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+              <Suspense fallback={<LoadingSpinner />}>
+                {loading ? <LoadingSpinner /> : children}
+              </Suspense>
             </AbilityProvider>
           </AppInitializer>
         </ReduxProvider>
