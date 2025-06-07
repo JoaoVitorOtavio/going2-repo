@@ -1,4 +1,5 @@
 const API_URL = "http://localhost:3001";
+import { IUser } from "@/commons/interfaces/users";
 import { toast } from "react-toastify";
 
 interface LoginPayload {
@@ -8,12 +9,7 @@ interface LoginPayload {
 
 export interface LoginResponse {
   token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-  };
+  user: Partial<IUser>;
 }
 
 export const authService = {
