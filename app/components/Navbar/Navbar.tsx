@@ -85,9 +85,11 @@ export default function Navbar() {
 
       {isOpen && (
         <div className="md:hidden bg-blue-500 px-4 pb-4 space-y-2">
-          <Link href="/users" className="block hover:text-gray-200">
-            Lista de Usuários
-          </Link>
+          {ability.can("read", "User") && (
+            <Link href="/users" className="block hover:text-gray-200">
+              Lista de Usuários
+            </Link>
+          )}
           {ability.can("create", "User") && (
             <Link href="/create/user" className="block hover:text-gray-200">
               Criar Usuário
