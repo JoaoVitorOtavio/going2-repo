@@ -41,7 +41,6 @@ export class UsersService {
         };
 
         const code = err.code ?? err.driverError?.code;
-        const detail = err.detail ?? err.driverError?.detail;
 
         if (code === '23505') {
           throw new BadRequestException('Já existe um usuário com esse e-mail');
@@ -72,9 +71,19 @@ export class UsersService {
         throw new NotFoundException('Usuário não encontrado');
       }
 
-      const filteredUpdateData = Object.fromEntries(
+      const filteredUpdateData: Partial<Users> = Object.fromEntries(
         Object.entries(updateData).filter(([_, value]) => value !== undefined),
       );
+
+      if (filteredUpdateData.password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(
+          filteredUpdateData.password,
+          salt,
+        );
+
+        filteredUpdateData.password = hashedPassword;
+      }
 
       Object.assign(user, filteredUpdateData);
       await this.usersRepo.update(id, filteredUpdateData);
@@ -84,6 +93,24 @@ export class UsersService {
 
       return result;
     } catch (error: any) {
+      if (typeof error === 'object' && error !== null) {
+        const err = error as {
+          code?: string;
+          detail?: string;
+          driverError?: { code?: string; detail?: string };
+        };
+
+        const code = err.code ?? err.driverError?.code;
+
+        if (code === '23505') {
+          throw new BadRequestException('Já existe um usuário com esse e-mail');
+        }
+
+        if ('message' in err && typeof err.message === 'string') {
+          throw new BadRequestException(err.message || 'Erro ao criar usuário');
+        }
+      }
+
       if (error instanceof Error) {
         throw new BadRequestException(
           error?.message || 'Erro ao criar usuário',
