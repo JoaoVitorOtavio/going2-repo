@@ -8,22 +8,46 @@ import { redirect } from "next/navigation";
 import LoadingSpinner from "../components/Spinner/Spinner";
 import { IUser } from "@/commons/interfaces/users";
 import Navbar from "../components/Navbar/Navbar";
+import { useAbility } from "@/contexts/AbilityContext";
+import Footer from "../components/Footer/Footer";
 
 export default function Users() {
   const dispatch = useDispatch();
+  const ability = useAbility();
+
   const users = useSelector((state: RootState) => state.user.users);
+  const currentUser = useSelector((state: RootState) => state.user.user);
+  const globalLoading = useSelector((state: RootState) => state.user.loading);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function fetchUsers() {
-      const result = await userService.findAll();
-      dispatch(setUsers(result));
+    setIsLoading(true);
+
+    if (!ability.can("read", "User")) {
       setIsLoading(false);
+      redirect("/403");
     }
 
-    fetchUsers();
-  }, [dispatch]);
+    setIsLoading(false);
+  }, [ability]);
+
+  useEffect(() => {
+    if (ability.can("read", "User")) {
+      async function fetchUsers() {
+        const result = await userService.findAll();
+
+        const usersWithoutCurrent = result.filter(
+          (user) => user.id !== currentUser?.id
+        );
+
+        dispatch(setUsers(usersWithoutCurrent));
+        setIsLoading(false);
+      }
+
+      fetchUsers();
+    }
+  }, [ability, currentUser?.id, dispatch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -35,7 +59,7 @@ export default function Users() {
     }
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading || globalLoading) return <LoadingSpinner />;
 
   if (users.length === 0)
     return (
@@ -78,17 +102,21 @@ export default function Users() {
                 >
                   Editar
                 </button>
-                <button
-                  onClick={() => handleDelete(user.id)}
-                  className="cursor-pointer px-4 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                  Deletar
-                </button>
+
+                {ability.can("delete", "User") && (
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="cursor-pointer px-4 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Deletar
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+      <Footer />
     </>
   );
 }
