@@ -1,9 +1,18 @@
 "use client";
+import Footer from "@/app/components/Footer/Footer";
 import Navbar from "@/app/components/Navbar/Navbar";
 import { userService } from "@/services/userService";
+import { RootState } from "@/store";
 import { LoaderCircle } from "lucide-react";
 import { redirect, useParams } from "next/navigation";
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 export default function UpdateUserPassword() {
@@ -13,6 +22,16 @@ export default function UpdateUserPassword() {
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [repeatPassword, setRepeatPassword] = useState<string>("");
+
+  const currentUser = useSelector((state: RootState) => state.user.user);
+
+  useEffect(() => {
+    if (currentUser?.role !== "admin") {
+      if (currentUser?.id !== Number(params.id)) {
+        return redirect("/403");
+      }
+    }
+  }, [currentUser?.id, currentUser?.role, params.id]);
 
   const handleChange = (
     value: string,
@@ -36,9 +55,19 @@ export default function UpdateUserPassword() {
       });
       setIsLoading(false);
     } finally {
-      redirect("/users");
+      if (currentUser?.role !== "user") {
+        redirect("/users");
+      }
+
+      redirect("/home");
     }
-  }, [currentPassword, newPassword, params.id, repeatPassword]);
+  }, [
+    currentPassword,
+    currentUser?.role,
+    newPassword,
+    params.id,
+    repeatPassword,
+  ]);
 
   return (
     <>
@@ -104,6 +133,7 @@ export default function UpdateUserPassword() {
           </button>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
