@@ -37,7 +37,7 @@ export class AuthService {
 
       return {
         user: result,
-        token: this.jwtService.sign(result),
+        token: this.jwtService.sign(result, { expiresIn: '1h' }),
       };
     } catch (error: any) {
       if (error instanceof Error) {
