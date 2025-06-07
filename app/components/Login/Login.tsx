@@ -1,7 +1,7 @@
 "use client";
 import { validateJwt } from "@/app/utils/auth";
 import { authService, LoginResponse } from "@/services/authService";
-import { setToken } from "@/store/slices/userSlice";
+import { setToken, setUser } from "@/store/slices/userSlice";
 import { redirect } from "next/navigation";
 import {
   useState,
@@ -41,7 +41,9 @@ const Login = () => {
     });
 
     dispatch(setToken(response.token));
-    redirect("/users");
+    dispatch(setUser(response.user));
+
+    redirect("/home");
   }, [dispatch, email, password]);
 
   return (
