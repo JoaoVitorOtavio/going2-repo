@@ -6,13 +6,14 @@ import { redirect } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { setToken } from "@/store/slices/userSlice";
+import { useAbility } from "@/contexts/AbilityContext";
 
 export default function Navbar() {
   const dispatch = useDispatch();
-
-  const user = JSON.parse(localStorage.getItem("user")!);
+  const ability = useAbility();
 
   const userToken = useSelector((state: RootState) => state.user.token);
+  const currentUser = useSelector((state: RootState) => state.user.user);
 
   const [localToken, setLocalToken] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -28,6 +29,7 @@ export default function Navbar() {
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     dispatch(setToken(""));
     redirect("/");
   }, [dispatch]);
@@ -37,25 +39,37 @@ export default function Navbar() {
   return (
     <nav className="bg-blue-600 text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="text-xl font-bold">Meu Sistema</div>
+        <div className="cursor-pointer text-xl font-bold">
+          <span onClick={() => redirect("/home")}>
+            {`Usuário: ${currentUser?.name}` || "Meu Sistema"}
+          </span>
+        </div>
 
-        {/* Ícone Mobile */}
         <div className="md:hidden">
           <button onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
 
-        {/* Links (Desktop) */}
         <div className="hidden md:flex space-x-6">
-          <Link href="/users" className="hover:text-gray-200">
-            Lista de Usuários
-          </Link>
-          <Link href="/create/user" className="hover:text-gray-200">
-            Criar Usuário
+          {ability.can("read", "User") && (
+            <Link href="/users" className="hover:text-gray-200">
+              Lista de Usuários
+            </Link>
+          )}
+          {ability.can("create", "User") && (
+            <Link href="/create/user" className="hover:text-gray-200">
+              Criar Usuário
+            </Link>
+          )}
+          <Link
+            href={`/update/user/${currentUser?.id}`}
+            className="hover:text-gray-200"
+          >
+            Alterar meu usuario
           </Link>
           <Link
-            href={`/update/user/${user.id}/password`}
+            href={`/update/user/${currentUser?.id}/password`}
             className="hover:text-gray-200"
           >
             Mudar Senha
@@ -69,17 +83,24 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Links (Mobile) */}
       {isOpen && (
         <div className="md:hidden bg-blue-500 px-4 pb-4 space-y-2">
           <Link href="/users" className="block hover:text-gray-200">
             Lista de Usuários
           </Link>
-          <Link href="/create/user" className="block hover:text-gray-200">
-            Criar Usuário
+          {ability.can("create", "User") && (
+            <Link href="/create/user" className="block hover:text-gray-200">
+              Criar Usuário
+            </Link>
+          )}
+          <Link
+            href={`/update/user/${currentUser?.id}`}
+            className="block hover:text-gray-200"
+          >
+            Alterar meu usuario
           </Link>
           <Link
-            href={`/update/user/${user.id}/password`}
+            href={`/update/user/${currentUser?.id}/password`}
             className="block hover:text-gray-200"
           >
             Mudar Senha
