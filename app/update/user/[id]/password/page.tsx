@@ -54,20 +54,11 @@ export default function UpdateUserPassword() {
         newPassword,
       });
       setIsLoading(false);
-    } finally {
-      if (currentUser?.role !== "user") {
-        redirect("/users");
-      }
-
       redirect("/home");
+    } finally {
+      setIsLoading(false);
     }
-  }, [
-    currentPassword,
-    currentUser?.role,
-    newPassword,
-    params.id,
-    repeatPassword,
-  ]);
+  }, [currentPassword, newPassword, params.id, repeatPassword]);
 
   return (
     <>
