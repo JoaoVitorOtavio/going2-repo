@@ -130,21 +130,23 @@ const UserForm = ({ isEdit = false }: { isEdit?: boolean }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-600">
-              Senha
-              <span className="text-xs text-gray-400">
-                {isEdit && " - Opcional"}
-              </span>
-            </label>
+          {Number(params.id) !== Number(currentUser?.id) && (
+            <div>
+              <label className="block text-sm text-gray-600">
+                Senha
+                <span className="text-xs text-gray-400">
+                  {isEdit && " - Opcional"}
+                </span>
+              </label>
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => handleChange(e.target.value, setPassword)}
-              className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => handleChange(e.target.value, setPassword)}
+                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
 
           {ability.can("manage", "all") && (
             <div>
