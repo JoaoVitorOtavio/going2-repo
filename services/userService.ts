@@ -80,8 +80,10 @@ export const userService = {
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message || "Erro ao atualizar senha!");
+        throw new Error(error.message || "Erro ao atualizar senha");
       } else {
         toast.error("Erro ao atualizar senha!");
+        throw new Error("Erro ao atualizar senha");
       }
     }
   },
