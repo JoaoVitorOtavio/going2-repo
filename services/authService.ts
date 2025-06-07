@@ -3,8 +3,10 @@ import { IUser } from "@/commons/interfaces/users";
 import { toast } from "react-toastify";
 
 interface LoginPayload {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
+  loginWithJwt?: boolean;
+  token?: string;
 }
 
 export interface LoginResponse {
@@ -24,7 +26,7 @@ export const authService = {
 
     if (!res.ok) {
       const error = await res.json();
-      toast.error("Erro ao fazer login!");
+      toast.error(error.message || "Erro ao fazer login!");
       throw new Error(error.message || "Erro ao fazer login");
     }
 
