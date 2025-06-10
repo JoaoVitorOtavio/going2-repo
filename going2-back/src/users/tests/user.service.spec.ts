@@ -29,4 +29,11 @@ describe('UserService', () => {
   it('Should be defined', () => {
     expect(userService).toBeDefined();
   });
+
+  it('Should find All Users', async () => {
+    userService.findAll = jest.fn().mockResolvedValueOnce({});
+
+    const result = await userService.findAll();
+    expect(result).toEqual({});
+  });
 });
