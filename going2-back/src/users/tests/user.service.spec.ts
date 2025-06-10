@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../users.service';
 import { Users } from '../users.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { InternalServerErrorException } from '@nestjs/common';
 
 let userService: UsersService;
 
@@ -35,5 +36,17 @@ describe('UserService', () => {
 
     const result = await userService.findAll();
     expect(result).toEqual({});
+  });
+
+  it('Should throw InternalServerErrorException when there is an error on findAll', async () => {
+    userService.findAll = jest
+      .fn()
+      .mockRejectedValueOnce(
+        new InternalServerErrorException('Erro ao buscar usuários'),
+      );
+
+    await expect(userService.findAll()).rejects.toThrow(
+      InternalServerErrorException,
+    );
   });
 });
