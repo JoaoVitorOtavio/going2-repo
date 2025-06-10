@@ -49,4 +49,15 @@ describe('UserService', () => {
       InternalServerErrorException,
     );
   });
+
+  it('Should remove an user', async () => {
+    const removeMock = jest
+      .spyOn(userService, 'remove')
+      .mockResolvedValue(undefined);
+
+    const result = await userService.remove(1);
+
+    expect(result).toEqual(undefined);
+    expect(removeMock).toHaveBeenCalledWith(1);
+  });
 });
