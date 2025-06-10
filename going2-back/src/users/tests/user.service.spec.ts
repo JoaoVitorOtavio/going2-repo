@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../users.service';
 import { Users } from '../users.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { InternalServerErrorException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 let userService: UsersService;
 
@@ -58,6 +61,15 @@ describe('UserService', () => {
     const result = await userService.remove(1);
 
     expect(result).toEqual(undefined);
+    expect(removeMock).toHaveBeenCalledWith(1);
+  });
+
+  it("Should return notFoundException when user doesn't exist", async () => {
+    const removeMock = jest
+      .spyOn(userService, 'remove')
+      .mockRejectedValueOnce(new NotFoundException('Usuário não encontrado'));
+
+    await expect(userService.remove(1)).rejects.toThrow(NotFoundException);
     expect(removeMock).toHaveBeenCalledWith(1);
   });
 });
