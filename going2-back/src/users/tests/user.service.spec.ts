@@ -4,6 +4,7 @@ import { Users } from '../users.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   BadRequestException,
+  HttpException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -65,7 +66,7 @@ describe('UserService', () => {
 
   it('Should throw InternalServerErrorException when there is an error on findAll', async () => {
     mockUsersRepo.find.mockRejectedValueOnce(
-      new InternalServerErrorException('Erro ao buscar usuários'),
+      new InternalServerErrorException(),
     );
 
     await expect(usersService.findAll()).rejects.toThrow(
@@ -77,7 +78,14 @@ describe('UserService', () => {
   it("Should return notFoundException when user doesn't exist", async () => {
     mockUsersRepo.findOneBy.mockResolvedValueOnce(undefined);
 
-    await expect(usersService.remove(1)).rejects.toThrow(NotFoundException);
+    try {
+      await usersService.remove(1);
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(NotFoundException);
+      expect(err.message).toBe('Usuário não encontrado');
+    }
+
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.delete).not.toHaveBeenCalled();
@@ -119,11 +127,26 @@ describe('UserService', () => {
     expect(result).toEqual(MOCK_RESULT);
   });
 
-  it('Should throw notFoundException when user doesnt exist', async () => {
-    mockUsersRepo.findOneBy.mockResolvedValueOnce(null);
+  it('Should throw notFoundException when user doesnt exist on find user by email', async () => {
+    mockUsersRepo.findOneBy.mockResolvedValueOnce(undefined);
+
+    try {
+      await usersService.findOneByEmail(MOCK_EMAIL);
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(NotFoundException);
+      expect(err.message).toBe('Usuário não encontrado');
+    }
+
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
+  });
+
+  it('Should throw badRequestException when there is an error on findOneByEmail', async () => {
+    mockUsersRepo.findOneBy.mockRejectedValueOnce(new BadRequestException());
 
     await expect(usersService.findOneByEmail(MOCK_EMAIL)).rejects.toThrow(
-      new NotFoundException('Usuário não encontrado'),
+      BadRequestException,
     );
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
