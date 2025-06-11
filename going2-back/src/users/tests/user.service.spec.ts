@@ -75,7 +75,7 @@ describe('UserService', () => {
     expect(mockUsersRepo.find).toHaveBeenCalledTimes(1);
   });
 
-  it("Should return notFoundException when user doesn't exist", async () => {
+  it("Should return notFoundException when user doesn't exist on remove", async () => {
     mockUsersRepo.findOneBy.mockResolvedValueOnce(undefined);
 
     try {
@@ -142,7 +142,7 @@ describe('UserService', () => {
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
   });
 
-  it('Should throw badRequestException when there is an error on findOneByEmail', async () => {
+  it('Should throw badRequestException when there is an error on find user by email', async () => {
     mockUsersRepo.findOneBy.mockRejectedValueOnce(new BadRequestException());
 
     await expect(usersService.findOneByEmail(MOCK_EMAIL)).rejects.toThrow(
