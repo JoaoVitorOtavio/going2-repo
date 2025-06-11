@@ -210,10 +210,8 @@ export class UsersService {
 
       return user;
     } catch (error: any) {
-      if (error instanceof Error) {
-        throw new BadRequestException(
-          error?.message || 'Erro ao buscar usuário por e-mail',
-        );
+      if (error instanceof HttpException) {
+        throw error;
       }
 
       throw new BadRequestException('Erro ao buscar usuário por e-mail');
