@@ -8,6 +8,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { UsersController } from '../http/users.controller';
 import { AbilityFactory } from 'src/casl/casl-ability.factory/casl-ability.factory';
 
@@ -22,9 +23,13 @@ const MOCK_RESULT = {
 const mockUsersRepo = {
   find: jest.fn(),
   findOneBy: jest.fn(),
+  findOne: jest.fn(),
   save: jest.fn(),
   delete: jest.fn(),
+  update: jest.fn(),
 } as Record<string, jest.Mock>;
+
+jest.mock('bcrypt');
 
 beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({
@@ -197,5 +202,37 @@ describe('UserService', () => {
     expect(mockUsersRepo.findOneBy).toHaveBeenLastCalledWith({
       id: MOCK_RESULT.id,
     });
+  });
+
+  it('Should return badRequestException if current password is incorrect', async () => {
+    const MOCK_UPDATE_PASSWORD_BODY = {
+      id: 1,
+      newPassword: 'new',
+      currentPassword: 'current',
+    };
+
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
+
+    const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
+
+    try {
+      await usersService.updatePassword(id, newPassword, currentPassword);
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(BadRequestException);
+      expect(err.message).toBe('Senha atual incorreta');
+    }
+
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+      where: { id: MOCK_UPDATE_PASSWORD_BODY.id },
+    });
+    expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(bcrypt.compare).toHaveBeenCalledTimes(1);
+    expect(bcrypt.compare).toHaveBeenCalledWith(
+      MOCK_UPDATE_PASSWORD_BODY.currentPassword,
+      MOCK_RESULT.password,
+    );
   });
 });
