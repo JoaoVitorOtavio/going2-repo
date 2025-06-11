@@ -132,6 +132,7 @@ describe('UserService', () => {
 
     try {
       await usersService.findOneByEmail(MOCK_EMAIL);
+      fail('should throw notFoundException');
     } catch (error: unknown) {
       const err = error as HttpException;
       expect(err).toBeInstanceOf(NotFoundException);
@@ -155,10 +156,28 @@ describe('UserService', () => {
   it('Should find a user by id', async () => {
     mockUsersRepo.findOneBy.mockResolvedValueOnce(MOCK_RESULT);
 
-    const result = await usersService.findOne(1);
+    const result = await usersService.findOne(MOCK_RESULT.id);
 
     expect(result).toEqual(MOCK_RESULT);
-    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(MOCK_RESULT.id);
     expect(mockUsersRepo.findOneBy).toHaveBeenLastCalledWith({ id: 1 });
+  });
+
+  it('Should throw notFoundException when user doesnt exist on find user by id', async () => {
+    mockUsersRepo.findOneBy.mockResolvedValueOnce(undefined);
+
+    try {
+      await usersService.findOne(MOCK_RESULT.id);
+      fail('should throw notFoundException');
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(NotFoundException);
+      expect(err.message).toBe('Usuário não encontrado');
+    }
+
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({
+      id: MOCK_RESULT.id,
+    });
   });
 });
