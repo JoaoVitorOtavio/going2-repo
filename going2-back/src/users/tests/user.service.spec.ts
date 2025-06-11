@@ -151,4 +151,14 @@ describe('UserService', () => {
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
   });
+
+  it('Should find a user by id', async () => {
+    mockUsersRepo.findOneBy.mockResolvedValueOnce(MOCK_RESULT);
+
+    const result = await usersService.findOne(1);
+
+    expect(result).toEqual(MOCK_RESULT);
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenLastCalledWith({ id: 1 });
+  });
 });
