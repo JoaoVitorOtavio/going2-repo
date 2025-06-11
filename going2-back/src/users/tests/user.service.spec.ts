@@ -11,6 +11,11 @@ import { UsersController } from '../http/users.controller';
 import { AbilityFactory } from 'src/casl/casl-ability.factory/casl-ability.factory';
 
 let usersService: UsersService;
+const MOCK_EMAIL = 'email@fake';
+const MOCK_RESULT = {
+  id: 1,
+  name: 'mockedUser',
+};
 
 const mockUsersRepo = {
   find: jest.fn(),
@@ -19,7 +24,7 @@ const mockUsersRepo = {
   delete: jest.fn(),
 } as Record<string, jest.Mock>;
 
-beforeEach(async () => {
+beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({
     controllers: [UsersController],
     providers: [
@@ -40,6 +45,10 @@ beforeEach(async () => {
   usersService = moduleRef.get(UsersService);
 });
 
+beforeEach(() => {
+  jest.resetAllMocks();
+});
+
 describe('UserService', () => {
   it('Should be defined', () => {
     expect(usersService).toBeDefined();
@@ -49,6 +58,8 @@ describe('UserService', () => {
     mockUsersRepo.find.mockResolvedValueOnce([]);
 
     const result = await usersService.findAll();
+
+    expect(mockUsersRepo.find).toHaveBeenCalledTimes(1);
     expect(result).toEqual([]);
   });
 
@@ -60,6 +71,7 @@ describe('UserService', () => {
     await expect(usersService.findAll()).rejects.toThrow(
       InternalServerErrorException,
     );
+    expect(mockUsersRepo.find).toHaveBeenCalledTimes(1);
   });
 
   it("Should return notFoundException when user doesn't exist", async () => {
@@ -67,6 +79,7 @@ describe('UserService', () => {
 
     await expect(usersService.remove(1)).rejects.toThrow(NotFoundException);
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.delete).not.toHaveBeenCalled();
   });
 
@@ -75,6 +88,7 @@ describe('UserService', () => {
 
     await expect(usersService.remove(1)).rejects.toThrow(BadRequestException);
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.delete).not.toHaveBeenCalled();
   });
 
@@ -89,7 +103,29 @@ describe('UserService', () => {
     const result = await usersService.remove(1);
 
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.delete).toHaveBeenCalledWith(1);
+    expect(mockUsersRepo.delete).toHaveBeenCalledTimes(1);
     expect(result).toBeUndefined();
+  });
+
+  it('Should find a user by email', async () => {
+    mockUsersRepo.findOneBy.mockResolvedValueOnce(MOCK_RESULT);
+
+    const result = await usersService.findOneByEmail(MOCK_EMAIL);
+
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(MOCK_RESULT);
+  });
+
+  it('Should throw notFoundException when user doesnt exist', async () => {
+    mockUsersRepo.findOneBy.mockResolvedValueOnce(null);
+
+    await expect(usersService.findOneByEmail(MOCK_EMAIL)).rejects.toThrow(
+      new NotFoundException('Usuário não encontrado'),
+    );
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledWith({ email: MOCK_EMAIL });
   });
 });
