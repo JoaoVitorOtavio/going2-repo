@@ -185,4 +185,17 @@ describe('UserService', () => {
       id: MOCK_RESULT.id,
     });
   });
+
+  it('Should throw BadRequestException when there is an error on find user by id', async () => {
+    mockUsersRepo.findOneBy.mockRejectedValueOnce(new BadRequestException());
+
+    await expect(usersService.findOne(MOCK_RESULT.id)).rejects.toThrow(
+      BadRequestException,
+    );
+
+    expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOneBy).toHaveBeenLastCalledWith({
+      id: MOCK_RESULT.id,
+    });
+  });
 });
