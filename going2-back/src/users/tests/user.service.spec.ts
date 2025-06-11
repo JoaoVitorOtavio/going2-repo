@@ -16,6 +16,7 @@ const MOCK_EMAIL = 'email@fake';
 const MOCK_RESULT = {
   id: 1,
   name: 'mockedUser',
+  password: '123',
 };
 
 const mockUsersRepo = {
@@ -158,7 +159,11 @@ describe('UserService', () => {
 
     const result = await usersService.findOne(MOCK_RESULT.id);
 
-    expect(result).toEqual(MOCK_RESULT);
+    expect(result).toEqual({
+      id: MOCK_RESULT.id,
+      name: MOCK_RESULT.name,
+    });
+    expect(result).not.toHaveProperty('password');
     expect(mockUsersRepo.findOneBy).toHaveBeenCalledTimes(MOCK_RESULT.id);
     expect(mockUsersRepo.findOneBy).toHaveBeenLastCalledWith({ id: 1 });
   });
