@@ -264,4 +264,25 @@ describe('UserService', () => {
     expect(mockUsersRepo.update).not.toHaveBeenCalled();
     expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
   });
+
+  it('Should update password correctly', async () => {
+    const MOCK_HASH = 'hashedPassword';
+
+    mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
+    mockBcrypt.compare.mockResolvedValueOnce(true);
+    mockBcrypt.genSalt.mockResolvedValueOnce('salt');
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH);
+
+    const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
+    await usersService.updatePassword(id, newPassword, currentPassword);
+
+    expect(bcrypt.compare).toHaveBeenCalledTimes(1);
+    expect(bcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(bcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenCalledWith(1, {
+      ...MOCK_RESULT,
+      password: MOCK_HASH,
+    });
+  });
 });
