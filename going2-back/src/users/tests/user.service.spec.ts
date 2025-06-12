@@ -13,6 +13,7 @@ import { UsersController } from '../http/users.controller';
 import { AbilityFactory } from 'src/casl/casl-ability.factory/casl-ability.factory';
 import { UserRole } from '../users.enums';
 import { expectToThrow } from 'src/helpers/test-exception';
+import { updateUserDTO } from '../users.dto';
 
 let usersService: UsersService;
 const MOCK_EMAIL = 'email@fake';
@@ -365,5 +366,30 @@ describe('UserService', () => {
       ...MOCK_UPDATE_USER_BODY,
       password: MOCK_HASH_PASSWORD,
     });
+  });
+
+  it('Should update user correctly when dont have password', async () => {
+    mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
+
+    const MOCK_UPDATE_BODY = {
+      name: MOCK_UPDATE_USER_BODY.name,
+      email: MOCK_UPDATE_USER_BODY.email,
+    } as updateUserDTO;
+
+    await usersService.update(MOCK_RESULT.id, MOCK_UPDATE_BODY);
+
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+      where: { id: MOCK_RESULT.id },
+    });
+
+    expect(mockBcrypt.genSalt).not.toHaveBeenCalled();
+    expect(mockBcrypt.hash).not.toHaveBeenCalled();
+
+    expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenCalledWith(
+      MOCK_RESULT.id,
+      MOCK_UPDATE_BODY,
+    );
   });
 });
