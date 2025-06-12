@@ -153,10 +153,8 @@ export class UsersService {
 
       return;
     } catch (error: any) {
-      if (error instanceof Error) {
-        throw new BadRequestException(
-          error?.message || 'Erro ao atualizar senha',
-        );
+      if (error instanceof HttpException) {
+        throw error;
       }
 
       throw new BadRequestException('Erro ao atualizar senha');
