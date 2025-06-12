@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersController } from '../http/users.controller';
 import { AbilityFactory } from 'src/casl/casl-ability.factory/casl-ability.factory';
 import { UserRole } from '../users.enums';
+import { expectToThrow } from 'src/helpers/test-exception';
 
 let usersService: UsersService;
 const MOCK_EMAIL = 'email@fake';
@@ -326,6 +327,24 @@ describe('UserService', () => {
     expect(mockUsersRepo.update).toHaveBeenLastCalledWith(MOCK_RESULT.id, {
       ...MOCK_UPDATE_USER_BODY,
       password: MOCK_HASH_PASSWORD,
+    });
+  });
+
+  it('Should return NotFoundException when user is not found on update', async () => {
+    mockUsersRepo.findOne.mockResolvedValueOnce(null);
+
+    await expectToThrow(
+      () => usersService.update(MOCK_RESULT.id, MOCK_UPDATE_USER_BODY),
+      NotFoundException,
+      'Usuário não encontrado',
+    );
+
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(bcrypt.genSalt).not.toHaveBeenCalled();
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(mockUsersRepo.findOne).toHaveBeenLastCalledWith({
+      where: { id: MOCK_RESULT.id },
     });
   });
 });
