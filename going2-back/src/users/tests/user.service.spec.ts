@@ -20,6 +20,12 @@ const MOCK_RESULT = {
   password: '123',
 };
 
+const MOCK_UPDATE_PASSWORD_BODY = {
+  id: 1,
+  newPassword: 'new',
+  currentPassword: 'current',
+};
+
 const mockUsersRepo = {
   find: jest.fn(),
   findOneBy: jest.fn(),
@@ -30,6 +36,16 @@ const mockUsersRepo = {
 } as Record<string, jest.Mock>;
 
 jest.mock('bcrypt');
+
+const mockBcrypt = {
+  compare: jest.fn(),
+  genSalt: jest.fn(),
+  hash: jest.fn(),
+};
+
+(bcrypt.compare as jest.Mock) = mockBcrypt.compare;
+(bcrypt.genSalt as jest.Mock) = mockBcrypt.genSalt;
+(bcrypt.hash as jest.Mock) = mockBcrypt.hash;
 
 beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({
@@ -205,13 +221,7 @@ describe('UserService', () => {
   });
 
   it('Should return badRequestException if current password is incorrect', async () => {
-    const MOCK_UPDATE_PASSWORD_BODY = {
-      id: 1,
-      newPassword: 'new',
-      currentPassword: 'current',
-    };
-
-    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    mockBcrypt.compare.mockResolvedValue(false);
     mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
 
     const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
@@ -234,5 +244,24 @@ describe('UserService', () => {
       MOCK_UPDATE_PASSWORD_BODY.currentPassword,
       MOCK_RESULT.password,
     );
+  });
+
+  it('Should return notFoundExeption when user not found on update password', async () => {
+    mockUsersRepo.findOne.mockResolvedValueOnce(undefined);
+
+    const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
+
+    try {
+      await usersService.updatePassword(id, newPassword, currentPassword);
+      fail('should throw notFoundException');
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(NotFoundException);
+      expect(err.message).toBe('Usuário não encontrado');
+    }
+
+    expect(bcrypt.compare).not.toHaveBeenCalled();
+    expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
   });
 });
