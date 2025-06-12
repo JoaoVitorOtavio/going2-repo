@@ -4,7 +4,6 @@ import { Users } from '../users.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   BadRequestException,
-  HttpException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -37,6 +36,7 @@ const MOCK_UPDATE_USER_BODY = {
 };
 
 const MOCK_HASH_PASSWORD = 'hashedPassword';
+const MOCK_SALT = 'mockedSalt';
 
 const mockUsersRepo = {
   find: jest.fn(),
@@ -268,17 +268,26 @@ describe('UserService', () => {
   });
 
   it('Should update password correctly', async () => {
+    const CLONE_MOCK_PASSWORD = MOCK_RESULT.password;
+
     mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
     mockBcrypt.compare.mockResolvedValueOnce(true);
-    mockBcrypt.genSalt.mockResolvedValueOnce('salt');
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
     mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
 
     const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
     await usersService.updatePassword(id, newPassword, currentPassword);
 
     expect(bcrypt.compare).toHaveBeenCalledTimes(1);
+    expect(bcrypt.compare).toHaveBeenCalledWith(
+      currentPassword,
+      CLONE_MOCK_PASSWORD,
+    );
     expect(bcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
     expect(bcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(bcrypt.hash).toHaveBeenCalledWith(newPassword, MOCK_SALT);
+
     expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.update).toHaveBeenCalledWith(1, {
       ...MOCK_RESULT,
@@ -286,7 +295,7 @@ describe('UserService', () => {
     });
   });
 
-  it('Should return BadRequestException with custom message when email already exist', async () => {
+  it('Should return BadRequestException with custom message when try to update user with an email already existent', async () => {
     const error = new Error('fake detail') as {
       code?: string;
       detail?: string;
@@ -300,7 +309,7 @@ describe('UserService', () => {
     mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
     mockUsersRepo.update.mockRejectedValueOnce(error);
 
-    mockBcrypt.genSalt.mockResolvedValueOnce('salt');
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
     mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
 
     await expectToThrow(
@@ -310,7 +319,13 @@ describe('UserService', () => {
     );
 
     expect(bcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
     expect(bcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(bcrypt.hash).toHaveBeenCalledWith(
+      MOCK_UPDATE_USER_BODY.password,
+      MOCK_SALT,
+    );
+
     expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.update).toHaveBeenLastCalledWith(MOCK_RESULT.id, {
@@ -338,8 +353,6 @@ describe('UserService', () => {
   });
 
   it('Should update user correctly', async () => {
-    const MOCK_SALT = 'mockedSalt';
-
     mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
     mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
     mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
