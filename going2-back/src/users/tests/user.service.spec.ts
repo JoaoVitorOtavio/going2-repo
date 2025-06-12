@@ -11,6 +11,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UsersController } from '../http/users.controller';
 import { AbilityFactory } from 'src/casl/casl-ability.factory/casl-ability.factory';
+import { UserRole } from '../users.enums';
 
 let usersService: UsersService;
 const MOCK_EMAIL = 'email@fake';
@@ -25,6 +26,15 @@ const MOCK_UPDATE_PASSWORD_BODY = {
   newPassword: 'new',
   currentPassword: 'current',
 };
+
+const MOCK_UPDATE_USER_BODY = {
+  name: 'fake',
+  email: 'fake@mail',
+  password: 'fakepassword',
+  role: UserRole.USER,
+};
+
+const MOCK_HASH_PASSWORD = 'hashedPassword';
 
 const mockUsersRepo = {
   find: jest.fn(),
@@ -266,12 +276,10 @@ describe('UserService', () => {
   });
 
   it('Should update password correctly', async () => {
-    const MOCK_HASH = 'hashedPassword';
-
     mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
     mockBcrypt.compare.mockResolvedValueOnce(true);
     mockBcrypt.genSalt.mockResolvedValueOnce('salt');
-    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH);
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
 
     const { id, newPassword, currentPassword } = MOCK_UPDATE_PASSWORD_BODY;
     await usersService.updatePassword(id, newPassword, currentPassword);
@@ -282,7 +290,42 @@ describe('UserService', () => {
     expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
     expect(mockUsersRepo.update).toHaveBeenCalledWith(1, {
       ...MOCK_RESULT,
-      password: MOCK_HASH,
+      password: MOCK_HASH_PASSWORD,
+    });
+  });
+
+  it('Should return BadRequestException with custom message when email already exist', async () => {
+    const error = new Error('fake detail') as {
+      code?: string;
+      detail?: string;
+      driverError?: { code?: string; detail?: string };
+    };
+
+    error.code = '23505';
+    error.detail = 'fake detail';
+    error.driverError = { code: '23505', detail: 'fake detail' };
+
+    mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
+    mockUsersRepo.update.mockRejectedValueOnce(error);
+
+    mockBcrypt.genSalt.mockResolvedValueOnce('salt');
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
+
+    try {
+      await usersService.update(MOCK_RESULT.id, MOCK_UPDATE_USER_BODY);
+    } catch (error: unknown) {
+      const err = error as HttpException;
+      expect(err).toBeInstanceOf(BadRequestException);
+      expect(err.message).toBe('Já existe um usuário com esse e-mail');
+    }
+
+    expect(bcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(bcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenLastCalledWith(MOCK_RESULT.id, {
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
     });
   });
 });
