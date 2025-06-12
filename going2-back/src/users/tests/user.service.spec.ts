@@ -335,4 +335,35 @@ describe('UserService', () => {
       where: { id: MOCK_RESULT.id },
     });
   });
+
+  it('Should update user correctly', async () => {
+    const MOCK_SALT = 'mockedSalt';
+
+    mockUsersRepo.findOne.mockResolvedValueOnce(MOCK_RESULT);
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
+    mockUsersRepo.update.mockResolvedValueOnce(MOCK_UPDATE_USER_BODY);
+
+    await usersService.update(MOCK_RESULT.id, MOCK_UPDATE_USER_BODY);
+
+    expect(mockUsersRepo.findOne).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+      where: { id: MOCK_RESULT.id },
+    });
+
+    expect(mockBcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.genSalt).toHaveBeenCalledWith(10);
+
+    expect(mockBcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.hash).toHaveBeenCalledWith(
+      MOCK_UPDATE_USER_BODY.password,
+      MOCK_SALT,
+    );
+
+    expect(mockUsersRepo.update).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.update).toHaveBeenCalledWith(MOCK_RESULT.id, {
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+  });
 });
