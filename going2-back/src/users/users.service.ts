@@ -94,6 +94,10 @@ export class UsersService {
 
       return result;
     } catch (error: any) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       if (typeof error === 'object' && error !== null) {
         const err = error as {
           code?: string;
