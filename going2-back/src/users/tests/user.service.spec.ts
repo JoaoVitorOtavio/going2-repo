@@ -485,4 +485,48 @@ describe('UserService', () => {
       password: MOCK_HASH_PASSWORD,
     });
   });
+
+  it('Should create user correctly', async () => {
+    const CLONE_MOCK_PASSWORD = MOCK_UPDATE_USER_BODY.password;
+
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
+
+    mockUsersRepo.create.mockReturnValueOnce({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+    mockUsersRepo.save.mockResolvedValueOnce({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+
+    const result = await usersService.create(MOCK_UPDATE_USER_BODY);
+
+    expect(mockBcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.genSalt).toHaveBeenCalledWith(10);
+
+    expect(mockBcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.hash).toHaveBeenCalledWith(
+      MOCK_UPDATE_USER_BODY.password,
+      MOCK_SALT,
+    );
+
+    expect(mockUsersRepo.create).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.create).toHaveBeenCalledWith({
+      ...MOCK_UPDATE_USER_BODY,
+      password: CLONE_MOCK_PASSWORD,
+    });
+
+    expect(mockUsersRepo.save).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.save).toHaveBeenCalledWith({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+
+    expect(result).toEqual({
+      ...MOCK_UPDATE_USER_BODY,
+      password: CLONE_MOCK_PASSWORD,
+    });
+  });
 });
