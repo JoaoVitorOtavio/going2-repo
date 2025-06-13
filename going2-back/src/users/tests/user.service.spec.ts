@@ -45,6 +45,7 @@ const mockUsersRepo = {
   save: jest.fn(),
   delete: jest.fn(),
   update: jest.fn(),
+  create: jest.fn(),
 } as Record<string, jest.Mock>;
 
 jest.mock('bcrypt');
@@ -404,5 +405,49 @@ describe('UserService', () => {
       MOCK_RESULT.id,
       MOCK_UPDATE_BODY,
     );
+  });
+
+  it('Should return badRequestException when email is already in use', async () => {
+    const CLONE_MOCK_PASSWORD = MOCK_UPDATE_USER_BODY.password;
+
+    const error = new Error('fake detail') as {
+      code?: string;
+      detail?: string;
+      driverError?: { code?: string; detail?: string };
+    };
+
+    error.code = '23505';
+    error.detail = 'fake detail';
+    error.driverError = { code: '23505', detail: 'fake detail' };
+
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
+
+    mockUsersRepo.create.mockReturnValueOnce({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+    mockUsersRepo.save.mockRejectedValueOnce(error);
+
+    await expectToThrow(
+      () => usersService.create(MOCK_UPDATE_USER_BODY),
+      BadRequestException,
+      'Já existe um usuário com esse e-mail',
+    );
+
+    expect(mockBcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.genSalt).toHaveBeenCalledWith(10);
+
+    expect(mockBcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.hash).toHaveBeenCalledWith(
+      CLONE_MOCK_PASSWORD,
+      MOCK_SALT,
+    );
+
+    expect(mockUsersRepo.save).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.save).toHaveBeenCalledWith({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
   });
 });
