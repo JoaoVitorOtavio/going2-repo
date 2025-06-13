@@ -450,4 +450,39 @@ describe('UserService', () => {
       password: MOCK_HASH_PASSWORD,
     });
   });
+
+  it('Should return badRequestException when there is an error', async () => {
+    const CLONE_MOCK_PASSWORD = MOCK_UPDATE_USER_BODY.password;
+
+    mockBcrypt.genSalt.mockResolvedValueOnce(MOCK_SALT);
+    mockBcrypt.hash.mockResolvedValueOnce(MOCK_HASH_PASSWORD);
+
+    mockUsersRepo.create.mockReturnValueOnce({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+    mockUsersRepo.save.mockRejectedValueOnce(new BadRequestException());
+
+    await expectToThrow(
+      () => usersService.create(MOCK_UPDATE_USER_BODY),
+      BadRequestException,
+      'Bad Request',
+      true,
+    );
+
+    expect(mockBcrypt.genSalt).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.genSalt).toHaveBeenCalledWith(10);
+
+    expect(mockBcrypt.hash).toHaveBeenCalledTimes(1);
+    expect(mockBcrypt.hash).toHaveBeenCalledWith(
+      CLONE_MOCK_PASSWORD,
+      MOCK_SALT,
+    );
+
+    expect(mockUsersRepo.save).toHaveBeenCalledTimes(1);
+    expect(mockUsersRepo.save).toHaveBeenCalledWith({
+      ...MOCK_UPDATE_USER_BODY,
+      password: MOCK_HASH_PASSWORD,
+    });
+  });
 });
